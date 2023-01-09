@@ -5,6 +5,7 @@ dotenv.config();
 
 import User from './models/User.js';
 import FoodItem from './models/Fooditem.js';
+import Table from './models/Table.js';
 
 const app = express();
 app.use(express.json());
@@ -125,78 +126,157 @@ app.post('/signup', async (req, res) => {
 
 })
 
-app.post('/login',async(req,res)=>{
-    const {email,password} = req.body;
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
 
-    if(!email || !password){
+    if (!email || !password) {
         return res.json({
-            success:false,
-            message:"Email and password are required"
+            success: false,
+            message: "Email and password are required"
         })
     }
-    const existingUser = await User.findOne({email:email,password:password});
-      if(existingUser){
+    const existingUser = await User.findOne({ email: email, password: password });
+    if (existingUser) {
         return res.json({
-            success:true,
-            message:"Login Successfully",
-            data:existingUser 
+            success: true,
+            message: "Login Successfully",
+            data: existingUser
         })
-      } 
-      else{
+    }
+    else {
         return res.json({
-            success:false,
-            message:"Invalid email or password"
+            success: false,
+            message: "Invalid email or password"
         })
-      }
+    }
 })
 
-app.post('/createFoodItem',async(req,res)=>{
-  const {title,price,description,imgurl,category} = req.body;
-   
-  const foodItem =new FoodItem({
-    title:title,
-    description:description,
-    price:price,
-    imgurl:imgurl,
-    category:category
-  })
-  const savedFoodItem = await foodItem.save();
+app.post('/createFoodItem', async (req, res) => {
+    const { title, price, description, imgurl, category } = req.body;
 
-  res.json({
-    success:true,
-    message:"Food item created successfully",
-    data:savedFoodItem
-  })
+    const foodItem = new FoodItem({
+        title: title,
+        description: description,
+        price: price,
+        imgurl: imgurl,
+        category: category
+    })
+    const savedFoodItem = await foodItem.save();
+
+    res.json({
+        success: true,
+        message: "Food item created successfully",
+        data: savedFoodItem
+    })
 })
 // http:localhost:5000/foodItemByCategory?category=pizza
-app.get('/foodItemByCategory',async(req,res)=>{
-    const {category} = req.query;
+app.get('/foodItemByCategory', async (req, res) => {
+    const { category } = req.query;
 
     const foodItems = await FoodItem.find({
-        category:{$regex:category,$options:'i'}
+        category: { $regex: category, $options: 'i' }
     })
 
     res.json({
-        success:true,
-        message:"Food item fetch successfully",
-        data:foodItems
+        success: true,
+        message: "Food item fetch successfully",
+        data: foodItems
     })
 })
 
-app.get('/foodItems',async(req,res)=>{
-    const {title} = req.query;
+app.get('/foodItems', async (req, res) => {
+    const { title } = req.query;
 
     const foodItems = await FoodItem.find({
-        title:{$regex:title,$options:'i'}
+        title: { $regex: title, $options: 'i' }
     })
 
     res.json({
-        success:true,
-        message:"Food item fetch successfully",
-        data:foodItems
+        success: true,
+        message: "Food item fetch successfully",
+        data: foodItems
     })
 })
 
+// create table
+app.post('/createTable', async(req, res) => {
+    const { tablNumber} = req.body;
+
+    const existingTable = await Table.findOne({ tableNumber: tablNumber });
+    if (existingTable) {
+        return res.json({
+            success: false,
+            message: "Table aiready exists"
+        })
+    }
+
+    const table = new Table({
+        tablNumber: tablNumber,
+        occupied: false
+
+    })
+    const savedTable = await table.save();
+    res.json({
+        success: true,
+        message: "Table created successfully",
+        data: savedTable
+    })
+
+})
+app.post('/bookTable',async(req, res) => {
+    const { tableNumber, userId } = req.body;
+
+    const existingTable = await Table.findOne({ tableNumber: tableNumber });
+    if (existingTable && existingTable.occupied) {
+        return res.json({
+            success: false,
+            message: "Table already occupied"
+        })
+
+    }
+    if (existingTable) {
+        existingTable.occupied = true;
+        existingTable.userId = userId;
+        await existingTable.save();
+    }
+    res.json({
+        success: true,
+        message: "Table Booked successfully",
+        data:existingTable
+    })
+})
+
+app.post('/unbookTable', async (req, res) => {
+   const {tableNumber} =req.body;
+
+   const existingTable = awaitTable.findOne({tableNumber:tableNumber});
+
+   if(existingTable){
+    existingTable.occupied = false;
+    existingTable.userId = null;
+    await existingTable.save();
+   }
+   res.json({
+    success: true,
+    message: "Table unbooked successfully",
+    data:existingTable
+})
+})
+
+app.get('/availableTables',async(req,res)=>{
+    const { tableNumber, userId } = req.body;
+
+    const availableTables = await Table.find({ occupied:false});
+    
+         res.json({
+            success:true,
+            message: "Available yable fetch successfully",
+            data:availableTables
+        })
+})
+
+
+  
 //api routes ends here
 
 
