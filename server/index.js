@@ -12,6 +12,7 @@ app.use(express.json());
 
 
 const PORT = process.env.PORT || 5000;
+mongoose.set("strictQuery", false);
 
 mongoose.connect(process.env.MONGODB_URL, () => {
     console.log('connected to mongodb')
@@ -199,8 +200,8 @@ app.get('/foodItems', async (req, res) => {
 })
 
 // create table
-app.post('/createTable', async(req, res) => {
-    const { tablNumber} = req.body;
+app.post('/createTable', async (req, res) => {
+    const { tablNumber } = req.body;
 
     const existingTable = await Table.findOne({ tableNumber: tablNumber });
     if (existingTable) {
@@ -223,7 +224,7 @@ app.post('/createTable', async(req, res) => {
     })
 
 })
-app.post('/bookTable',async(req, res) => {
+app.post('/bookTable', async (req, res) => {
     const { tableNumber, userId } = req.body;
 
     const existingTable = await Table.findOne({ tableNumber: tableNumber });
@@ -242,42 +243,42 @@ app.post('/bookTable',async(req, res) => {
     res.json({
         success: true,
         message: "Table Booked successfully",
-        data:existingTable
+        data: existingTable
     })
 })
 
 app.post('/unbookTable', async (req, res) => {
-   const {tableNumber} =req.body;
+    const { tableNumber } = req.body;
 
-   const existingTable = awaitTable.findOne({tableNumber:tableNumber});
+    const existingTable = awaitTable.findOne({ tableNumber: tableNumber });
 
-   if(existingTable){
-    existingTable.occupied = false;
-    existingTable.userId = null;
-    await existingTable.save();
-   }
-   res.json({
-    success: true,
-    message: "Table unbooked successfully",
-    data:existingTable
+    if (existingTable) {
+        existingTable.occupied = false;
+        existingTable.userId = null;
+        await existingTable.save();
+    }
+    res.json({
+        success: true,
+        message: "Table unbooked successfully",
+        data: existingTable
+    })
 })
-})
 
-app.get('/availableTables',async(req,res)=>{
+app.get('/availableTables', async (req, res) => {
     const { tableNumber, userId } = req.body;
 
-    const availableTables = await Table.find({ occupied:false});
-    
-         res.json({
-            success:true,
-            message: "Available yable fetch successfully",
-            data:availableTables
-        })
+    const availableTables = await Table.find({ occupied: false });
+
+    res.json({
+        success: true,
+        message: "Available yable fetch successfully",
+        data: availableTables
+    })
 })
 
 
-app.post("/orderFoodItems", async(req, res) => {
-    const {userId, tableNumber, items} = req.body
+app.post("/orderFoodItems", async (req, res) => {
+    const { userId, tableNumber, items } = req.body
 
     const totalOrders = await Order.countDocuments();
     const orderId = totalOrders + 1;
@@ -287,7 +288,7 @@ app.post("/orderFoodItems", async(req, res) => {
         userId: userId,
         tableNumber: tableNumber,
         items: items
-        })
+    })
 
     const savedOrder = await order.save();
 
@@ -298,31 +299,32 @@ app.post("/orderFoodItems", async(req, res) => {
     })
 })
 
-app.get("/order", async(req, res)=>{
-    const {orderId} = req.query;
-  
-    const order = await Order.findOne({orderId: orderId});
-  
-      res.json({
-          success: true,
-          message: "Order fetched successfully",
-          data: order
-      })
-  })
-  
-  app.get("/ordersByUserId", async(req, res)=>{
-      const {userId} = req.query;
-  
-      const orders = await Order.find({userId: userId});
-  
-      res.json({
-          success: true,
-          message: "Orders fetched successfully",
-          data: orders
-      })
-  });
 
-  
+app.get("/order", async (req, res) => {
+    const { orderId } = req.query;
+
+    const order = await Order.findOne({ orderId: orderId });
+
+    res.json({
+        success: true,
+        message: "Order fetched successfully",
+        data: order
+    })
+})
+
+app.get("/ordersByUserId", async (req, res) => {
+    const { userId } = req.query;
+
+    const orders = await Order.find({ userId: userId });
+
+    res.json({
+        success: true,
+        message: "Orders fetched successfully",
+        data: orders
+    })
+});
+
+
 //api routes ends here
 
 
